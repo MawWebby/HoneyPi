@@ -15,4 +15,5 @@
 <h3>3. Reporting</h3>
 <h3>4. Compiling</h3>
 <h3>5. List of IPs</h3>
+<h3>6. Automatic IP Blocking</h3>
 <p></p>

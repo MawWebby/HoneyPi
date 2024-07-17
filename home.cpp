@@ -50,7 +50,7 @@ string fileactions[101] = {};
 //// DOCKER COMMANDS TO RUN ////
 ////////////////////////////////
 const char* dockerstatuscommand = "docker ps";
-
+const char* dockerstartguestssh = "docker run -it honeypotpi:guestsshv1";
 
 
 
@@ -111,8 +111,7 @@ void setup() {
     sendtolog("Hello, World");
     sendtolog("HoneyPi - MAIN Docker");
     sendtolog("Program by Matthew Whitworth (MawWebby)");
-    sendtolog("Version #" + honeyversion);
-    sendtolog("STARTING");
+    sendtolog("Version #: " + honeyversion);
     
     // DELAY FOR SYSTEM TO START FURTHER
     sleep(5);
@@ -141,7 +140,7 @@ void setup() {
 
     
     // OPEN HACKING FILES
-    sendtologopen("Opening Hacker File...");
+    sendtologopen("[INFO] - Opening Hacker File...");
 //    fstream myFile;
  //   myFile.open("hackerlogv1.txt");
 
@@ -154,8 +153,10 @@ void setup() {
     sendtologclosed("future");
 
 
+
     // CHECK DOCKER STATUS
-    sendtologopen("Checking for Docker Control...");
+    sendtologopen("[INFO] - Checking for Docker Control...");
+    sleep(1);
     int output = system(dockerstatuscommand);
     if (output == 0) {
         sendtolog("Done");
@@ -166,6 +167,28 @@ void setup() {
         logcritical("Could not communicate with docker");
 
     }
+
+
+
+
+    // START GUEST DOCKER CONTAINER FOR SSH
+    sendtologopen("[INFO] - Starting Guest Docker Container (SSH) - ");
+    sleep(2);
+    int status = system(dockerstartguestssh);
+
+
+
+    // SYSTEM STARTED
+    sendtolog("[INFO] - Updating API Token...");
+
+
+    // FUTURE NETWORK COMMUNICATION TO UPDATE API TOKENS
+
+    sendtolog("future");
+
+    
+    loginfo("System has started successfully");
+    loginfo("System will now enter waiting state");
 
 }
 
@@ -204,7 +227,7 @@ int main() {
             heartbeat = heartbeat + 1;
         }
 
-        if (generatingreport = true) {
+        if (generatingreport == true) {
             encounterederrors = createreport();
         }
         
