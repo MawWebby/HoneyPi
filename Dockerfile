@@ -13,7 +13,17 @@ WORKDIR /usr/src/honeypi
 # This command compiles your app using GCC, adjust for your source code
 RUN g++ -o honeypi home.cpp
 
+# REMOVE UNNEEDED PACKAGES
+RUN  apt-get remove openssh-server -y
+
+
+# INSTALL NEEDED PACKAGES
+RUN apt-get update
+RUN apt-get install -y docker.io
+
+
 # This command runs your application, comment out this line to compile only
 CMD ["./honeypi"]
+
 
 LABEL Name=honeypotpi Version=0.0.1

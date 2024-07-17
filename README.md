@@ -13,4 +13,6 @@
 <h3>2. Data Keylogger</h3>
 <p>The HoneyPi will keep extensive records of the keypresses and any mouse (if applicable) attempts that are made by the hacker on the virtual machine.</p>
 <h3>3. Reporting</h3>
+<h3>4. Compiling</h3>
+<h3>5. List of IPs</h3>
 <p></p>
