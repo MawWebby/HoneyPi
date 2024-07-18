@@ -64,7 +64,7 @@ int server_fd, new_socket;
 //// DOCKER COMMANDS TO RUN ////
 ////////////////////////////////
 const char* dockerstatuscommand = "docker ps";
-const char* dockerstartguestssh = "docker run -itd --network=my-network1 --name=SSHVMV1 honeypotpi:guestsshv1";
+const char* dockerstartguestssh = "docker run -itd --rm --network=my-network1 --name=SSHVMV1 honeypotpi:guestsshv1";
 
 
 
@@ -286,8 +286,8 @@ int setup() {
     sendtolog("future");
 
     
-    loginfo("System has started successfully");
-    loginfo("System will now enter waiting state");
+    loginfo("Main system has started successfully");
+    loginfo("Waiting for Heartbeat from VM");
     return 0;
 
 }

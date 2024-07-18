@@ -25,9 +25,19 @@
 
 char buffer[1024] = {0};
 int server_fd, new_socket;
+bool packetactive = false;
+
+int dictionary() {
+
+}
 
 void listenon63599() { 
     read(new_socket, buffer, 1024);
+    if (buffer != NULL) {
+        std::cout << buffer << std::endl;
+        packetactive = false;
+    }
+    return;
 }
 
 int main() {
@@ -69,16 +79,22 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
+    std::thread t1{listenon63599};
+    t1.detach();
+    packetactive = true;
     
     while(true) {
         std::cout << "test" << std::endl;
-        std::thread t{listenon63599};
-        
-        if (buffer != NULL) {
-            std::cout << buffer << std::endl;
+        sleep(2);
+
+        if (packetactive == false) {
+            std::thread t1{listenon63599};
+            t1.detach();
+            packetactive = true;
         }
-        std::cout << buffer << std::endl;
+        
     }
+
     send(new_socket, hello.c_str(), hello.size(), 0);
     std::cout << "Hello message sent" << std::endl;
     close(new_socket);
