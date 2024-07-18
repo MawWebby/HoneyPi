@@ -1,4 +1,4 @@
-<h1>This project is in very early development and not ready to be installed on systems yet.</h1>
+<h1>This project is in very early development.</h1>
 
 </br>
 <h1>HoneyPi</h1>
