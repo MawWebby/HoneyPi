@@ -3,8 +3,8 @@
 </br>
 <h1>HoneyPi</h1>
 <p>HoneyPi is a system that will soon revolutionize the internet as we know it. </p>
-<p>Hackers are constantly attacking the internet and vulnerable devices, what if there was some way to stop them?</p>
-<p>This is the idea of HoneyPi. Once a hacker tries to hack a HoneyPi too many times and is reported in a database too many times, it will create a master list of IPs that are malicious. Routers that are able to receive this master list will then block all traffic that is coming from these malicious IPs/port combinations. This will prevent malicious attacks on devices within a local network.</p>
+<p>Hackers are constantly attacking servers on the internet and other vulnerable devices, what if there was some way to stop them?</p>
+<p>This is the idea behind HoneyPi. </p>
 
 <h2>How does/will it work?</h2>
 <p>This project is still in very early stages by its developer. When completed, this is the intention of how it will run:</p>
