@@ -15,14 +15,14 @@ RUN g++ -o honeypi home.cpp
 RUN g++ -o test servertest.cpp
 
 # REMOVE UNNEEDED PACKAGES
-RUN  apt-get remove openssh-server -y
+RUN apt-get remove openssh-server -y
 
 # INSTALL NEEDED PACKAGES (DISABLE FOR SPEED BUILDING)
 RUN apt-get update
 RUN apt-get upgrade -y
 RUN apt-get install -y docker.io
-RUN apt-get install sudo -y
-
+RUN apt-get install -y sudo
+RUN apt-get install -y iputils-ping curl bash
 
 # This command runs your application, comment out this line to compile only
 CMD ["./honeypi"]
