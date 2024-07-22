@@ -38,7 +38,7 @@ int startupchecks = 0;
 int encounterederrors = 0;
 bool attacked = false;
 bool systemup = false;
-int heartbeat = 0;
+int heartbeat = 9;
 string erroroccurred = "";
 
 // REPORT VARIABLES
@@ -60,7 +60,7 @@ int serverSocket1 = 0;
 int serverSocket2 = 0;
 int server_fd, new_socket;
 bool packetactive = false;
-char buffer[1024] = {0};
+
 
 
 
@@ -69,12 +69,9 @@ char buffer[1024] = {0};
 ////////////////////////////////
 const char* dockerstatuscommand = "docker ps > nul:";
 const char* dockerstartguestssh = "docker run -itd --rm --network=my-network1 --name=SSHVMV1 honeypotpi:guestsshv1 > nul:";
-//const char* serverport63599script = "system(./test)";
 
-int serverport63599script() {
-    system("./test");
-    return 0;
-}
+
+
 
 ////////////////////////////
 // Send to Logger Scripts //
@@ -103,22 +100,48 @@ void logcritical(string data2) {
 
 
 
-int dictionary() {
-    if (attacked == false) {
-        if (buffer == "heartbeatSSH") {
-            loginfo("Received Heartbeat from SSH");
-            return 0;
+
+
+//////////////////////////////////////////
+// HANDLE NETWORKED CONNECTIONS (63599) //
+//////////////////////////////////////////
+void handleConnections(int server_fd) { 
+    char buffer[1024] = {0};
+    struct sockaddr_in address;
+    socklen_t addrlen = sizeof(address);
+    int new_socket;
+    ssize_t valread;
+    std::string hello = "Hello from server";
+
+    if ((new_socket = accept(server_fd, (struct sockaddr*)&address, &addrlen)) < 0) {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+
+    while(true) {
+        read(new_socket, buffer, 1024);
+        sendtologopen(buffer);
+
+        if (buffer != NULL && attacked == false) {
+
+            // HEARTBEAT COMMAND TO NOT SPAM LOG
+            if (buffer == "heartbeatSSH"*) {
+                if (heartbeat >= 10) {
+                    loginfo("Received heartbeat from SSH Guest VM");
+                } else {
+                    heartbeat = heartbeat + 1;
+                }
+            }
+
+        } elif (buffer != NULL && attacked == true) {
+
+        } elif (buffer == NULL) {
+            logcritical("INVALID CONNECTION RECEIVED, ignoring...");
         }
 
-        if (buffer == "attack") {
-            logwarning("Attack detected on SSH, logging");
-            attacked = true;
-        }
-    } else {
-        // ATTACKED RUN ATTACKED COMMANDS!
-        
-        return 0;
-
+        // Send a hello message to the client
+//        send(new_socket, hello.c_str(), hello.size(), 0);
+//        std::cout << "Hello message sent" << std::endl;
     }
 }
 
@@ -132,8 +155,16 @@ void listenon63599() {
         packetactive = false;
         dictionary();
     }
-    return;
 }
+
+
+/////////////////////////////////////////
+// HANDLE NETWORKED CONNECTIONS (8080) // 
+/////////////////////////////////////////
+void handle8080Connections(int server_fd3) {
+
+}
+
 
 //////////////////////////////
 // REPORT GENERATING SCRIPT //
@@ -153,9 +184,12 @@ int createreport() {
 
 
 
+
 /////////////////////////
 // THE MAIN CRASH LOOP //
 /////////////////////////
+
+
 
 
 
@@ -197,6 +231,8 @@ int setup() {
 
     sendtologclosed("DONE (no checks needed)");
     
+
+
 
 
 
@@ -243,6 +279,8 @@ int setup() {
 
 
     
+
+
     // OPEN HACKING FILES
     sendtologopen("[INFO] - Opening File...");
 //    fstream myFile;
@@ -255,6 +293,8 @@ int setup() {
  //       sendtologclosed("DONE");
  //   }
     sendtologclosed("future");
+
+
 
 
 
@@ -275,39 +315,44 @@ int setup() {
     }
 
 
+
+
+
+
+
     int PORT = 63599;
 
-    // OPEN NETWORK SERVER PORTS (1/2)
-    sendtologopen("[INFO] - Opening Server Ports (1/2).");
- //   std::thread t2{serverport63599script};
-    std::cout << "Hello message sent" << std::endl;
+    // OPEN NETWORK SERVER PORTS (1/3)
+    sendtologopen("[INFO] - Opening Server Ports (1/3)");
 
+    int server_fd, new_socket;
+    ssize_t valread;
     struct sockaddr_in address;
-    int opt = 1;
-    int addrlen = sizeof(address);
-    
+    socklen_t addrlen = sizeof(address);
+    std::cout << "Hello message sent" << std::endl;
     std::string hello = "Hello from server";
+    int opt = 1;
 
-    // Creating socket file descriptor
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+    // SETUP NETWORK PORTS
+    if((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
 
-    // Forcefully attaching socket to the port 8080
+    // Forcefully attaching socket to the port 63599
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
 
     // REACHED HERE
-
+    sendtologopen("...");
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
 
     // Binding the socket to the network address and port
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+    if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
@@ -315,12 +360,6 @@ int setup() {
         perror("listen");
         exit(EXIT_FAILURE);
     }
-    if (accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen) < 0) {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
-
-    std::cout << "NetworkPortDeclared" << std::endl;
 
     sendtologclosed("Done");
     sleep(2);
@@ -328,22 +367,25 @@ int setup() {
 
 
 
-
+    // SERVER PORT LISTEN THREAD
     sendtologopen("[INFO] - Creating server thread on port listen...");
 
     sleep(2);
-    std::thread t1{listenon63599};
-    t1.detach();
-    packetactive = true;
+    std::thread acceptingClientsThread(handleConnections, server_fd);
+    acceptingClientsThread.detach();
     sleep(1);
+
     sendtologclosed("Done");
 
 
 
-    // OPEN NETWORK SERVER PORTS (2/2)
+
+
+    // OPEN NETWORK SERVER PORTS (2/3)
     sendtologopen("[INFO] - Opening Server Ports (2/2)...");
     sleep(2);
     
+
 
 
 
@@ -405,26 +447,13 @@ int main() {
     while(true && startupchecks == 0 && encounterederrors == 0) {
         
         if (attacked == false) {
-            sleep(3);
+            sleep(2);
         } else {
-            sleep(1);
+            sleep(0.25);
             logwarning("Guest VM has been attacked, reporting...");
         }
 
         std::cout << "test" << std::endl;
-        sleep(2);
-
-        if (packetactive == false) {
-            std::thread t1{listenon63599};
-            t1.detach();
-            packetactive = true;
-        }
-
-        if (heartbeattime <= heartbeat) {
-            loginfo("heartbeat");
-        } else {
-            heartbeat = heartbeat + 1;
-        }
 
         if (generatingreport == true) {
             encounterederrors = createreport();
