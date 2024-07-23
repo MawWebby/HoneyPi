@@ -1,21 +1,10 @@
 //////////////////
 // Dependencies //
 //////////////////
-#include <cstdio>
-#include <cstdlib>
-#ifdef _WIN32
-#include <windows.h>
-#include <corecrt_io.h>
-#define sleep Sleep
-
-#else
-#include <unistd.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sys/socket.h>
-#include <cstring>
 #include <string.h>
-#endif
 #include <iostream>
 #include <fstream>
 #include <thread>
