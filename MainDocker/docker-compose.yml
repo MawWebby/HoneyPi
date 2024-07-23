@@ -3,9 +3,6 @@ version: '3.4'
 services:
   honeypotpi:
     image: honeypotpi
-    ports:
-      - 63599:63599
-      - 9090:9090
     build:
       context: .
       dockerfile: ./Dockerfile
@@ -13,3 +10,11 @@ services:
 networks:
   my_network1:
     driver: bridge
+    ports:
+      - 63599:63599
+      - 11535:11535
+  host:
+    driver: host
+    ports:
+      - 11535:11535
+      - 8080:8080

@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <cstring>
+#include <string.h>
 #endif
 #include <iostream>
 #include <fstream>
@@ -21,6 +22,7 @@
 
 using namespace std;
 
+const bool debug = false;
 
 
 
@@ -38,7 +40,7 @@ int startupchecks = 0;
 int encounterederrors = 0;
 bool attacked = false;
 bool systemup = false;
-int heartbeat = 9;
+int heartbeat = 29;
 string erroroccurred = "";
 
 // REPORT VARIABLES
@@ -120,23 +122,34 @@ void handleConnections(int server_fd) {
 
     while(true) {
         read(new_socket, buffer, 1024);
-        sendtologopen(buffer);
+        if (debug == true) {
+            sendtologopen(buffer);
+        }
 
         if (buffer != NULL && attacked == false) {
 
             // HEARTBEAT COMMAND TO NOT SPAM LOG
-            if (buffer == "heartbeatSSH"*) {
-                if (heartbeat >= 10) {
+            if (strcmp(buffer, "heartbeatSSH") == 0) {
+                if (heartbeat >= 30) {
                     loginfo("Received heartbeat from SSH Guest VM");
+                    heartbeat = 0;
                 } else {
                     heartbeat = heartbeat + 1;
                 }
             }
 
-        } elif (buffer != NULL && attacked == true) {
+            if(strcmp(buffer, "attacked") == 0) {
+                logwarning("SSH attacked! - Logging...");
+            }
 
-        } elif (buffer == NULL) {
-            logcritical("INVALID CONNECTION RECEIVED, ignoring...");
+        } else {
+            if (buffer != NULL && attacked == true) {
+
+            } else {
+                if (buffer == NULL) {
+                    logcritical("INVALID CONNECTION RECEIVED, ignoring...");
+                }
+            }
         }
 
         // Send a hello message to the client
@@ -146,14 +159,53 @@ void handleConnections(int server_fd) {
 }
 
 
-void listenon63599() { 
-    read(new_socket, buffer, 1024);
-    if (buffer != NULL) {
-        std::cout << "check" << std::endl;
-        std::cout << buffer << std::endl;
-        std::cout << "|" << std::endl;
-        packetactive = false;
-        dictionary();
+
+
+
+//////////////////////////////////////////
+// HANDLE NETWORKED CONNECTIONS (11535) //
+//////////////////////////////////////////
+void handle11535Connections(int server_fd2) {
+    char buffer[1024] = {0};
+    struct sockaddr_in address;
+    socklen_t addrlen = sizeof(address);
+    int new_socket2;
+    ssize_t valread;
+    std::string hello = "Hello from server";
+
+    if ((new_socket2 = accept(server_fd2, (struct sockaddr*)&address, &addrlen)) < 0) {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+
+    while(true) {
+        read(new_socket2, buffer, 1024);
+        sendtologopen(buffer);
+
+        if (buffer != NULL && attacked == false) {
+
+            // HEARTBEAT COMMAND TO NOT SPAM LOG
+            if (strcmp(buffer, "heartbeatSSH")) {
+                if (heartbeat >= 10) {
+                    loginfo("Received heartbeat from SSH Guest VM");
+                } else {
+                    heartbeat = heartbeat + 1;
+                }
+            } 
+
+        } else {
+            if (buffer != NULL && attacked == true) {
+
+            } else {
+                if (buffer == NULL) {
+                    logcritical("INVALID CONNECTION RECEIVED, ignoring...");
+                }
+            }
+        }
+
+ //        Send a hello message to the client
+         send(new_socket2, hello.c_str(), hello.size(), 0);
+         std::cout << "Hello message sent" << std::endl;
     }
 }
 
@@ -307,7 +359,6 @@ int setup() {
     } else {
         sendtolog("ERROR");
         startupchecks = startupchecks + 1;
-        logcritical("HoneyPi Docker is not priviledged!");
         logcritical("Could not communicate with docker");
         return 1;
         return 1;
@@ -329,7 +380,6 @@ int setup() {
     ssize_t valread;
     struct sockaddr_in address;
     socklen_t addrlen = sizeof(address);
-    std::cout << "Hello message sent" << std::endl;
     std::string hello = "Hello from server";
     int opt = 1;
 
@@ -368,7 +418,7 @@ int setup() {
 
 
     // SERVER PORT LISTEN THREAD
-    sendtologopen("[INFO] - Creating server thread on port listen...");
+    sendtologopen("[INFO] - Creating server thread on port 63599 listen...");
 
     sleep(2);
     std::thread acceptingClientsThread(handleConnections, server_fd);
@@ -381,10 +431,65 @@ int setup() {
 
 
 
+
+    sleep(3);
+    PORT = 11535;
+
     // OPEN NETWORK SERVER PORTS (2/3)
-    sendtologopen("[INFO] - Opening Server Ports (2/2)...");
-    sleep(2);
+    sendtologopen("[INFO] - Opening Server Ports (2/3)...");
+
+    int server_fd2, new_socket2;
+    ssize_t valread2;
+    struct sockaddr_in address2;
+    socklen_t addrlen2 = sizeof(address2);
+    int opt2 = 1;
     
+    sleep(1);
+
+    if((server_fd2 = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Forcefully attaching socket to the port 63599
+    if (setsockopt(server_fd2, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt2, sizeof(opt2))) {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+
+    // REACHED HERE
+    sendtologopen("...");
+    address2.sin_family = AF_INET;
+    address2.sin_addr.s_addr = INADDR_ANY;
+    address2.sin_port = htons(PORT);
+
+    // Binding the socket to the network address and port
+    if (bind(server_fd2, (struct sockaddr*)&address2, sizeof(address2)) < 0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+    if (listen(server_fd2, 3) < 0) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+
+    sendtologclosed("Done");
+    sleep(2);
+
+
+
+
+
+    // SERVER PORT LISTEN THREAD (2/3) (11535)
+    sendtologopen("[INFO] - Creating server thread on port 11535 listen...");
+
+    sleep(2);
+    std::thread acceptingClientsThread2(handle11535Connections, server_fd2);
+    acceptingClientsThread2.detach();
+    sleep(1);
+
+    sendtologclosed("Done");
+
 
 
 
@@ -435,8 +540,7 @@ int main() {
         return(1);
     }
 
-    loginfo("Main system has started successfully");
-    loginfo("Waiting for Heartbeat from VM");
+    loginfo("Main HoneyPi has started successfully");
 
     // NETWORK INFORMATION
     char buffer[BUFFER_SIZE];
@@ -452,8 +556,6 @@ int main() {
             sleep(0.25);
             logwarning("Guest VM has been attacked, reporting...");
         }
-
-        std::cout << "test" << std::endl;
 
         if (generatingreport == true) {
             encounterederrors = createreport();

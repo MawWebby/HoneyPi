@@ -25,7 +25,7 @@ RUN apt-get install -y sudo
 RUN apt-get install -y iputils-ping curl bash
 
 # This command runs your application, comment out this line to compile only
-CMD ["./honeypi"]
+ENTRYPOINT ["./honeypi"]
 
 
 LABEL Name=honeypotpi Version=0.0.1
