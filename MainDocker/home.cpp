@@ -19,6 +19,7 @@
 #include <iostream>
 #include <fstream>
 #include <thread>
+#include <ctime>
 
 using namespace std;
 
@@ -43,15 +44,21 @@ bool systemup = false;
 int heartbeat = 29;
 string erroroccurred = "";
 
-// REPORT VARIABLES
-bool generatingreport = false;
-string pubip = "0.0.0.0";
-int port = 0;
-string usernames[101] = {};
-string passwords[101] = {};
-string keybinds[1000] = {};
-string fileschanged[101] = {};
-string fileactions[101] = {};
+// DOCKER VARIABLES
+
+// REPORT VARIABLES - SSH
+bool SSHDockerActive = false;
+bool generatingreportSSH = false;
+string pubipSSH = "0.0.0.0";
+int portSSH = 0;
+string usernamesSSH[101] = {};
+string passwordsSSH[101] = {};
+string keybindsSSH[1000] = {};
+string fileschangedSSH[101] = {};
+string fileactionsSSH[101] = {};
+string pubkeysSSH[101] = {};
+string prikeysSSH[101] = {};
+string commandsrunSSH[1001] = {};
 
 // NETWORK VARIABLES
 const int serverport1 = 63599;
@@ -62,6 +69,22 @@ int serverSocket1 = 0;
 int serverSocket2 = 0;
 int server_fd, new_socket;
 bool packetactive = false;
+
+// TIME VARIABLES
+long long int startuptime = 0;
+long long int currenttime = 0;
+long long int timesincestartup = 0;
+int currenthour = 0;
+int currentminute = 0;
+int currentsecond = 0;
+int currentdayofyear = 0;
+int currentyear = 0;
+int currentmonth = 0;
+int secondsperyear = 3153600;
+int secondspermonth = 2628288;
+int secondsperday = 86400;
+int secondsperhour = 3600;
+int secondsperminute = 60;
 
 
 
@@ -136,6 +159,7 @@ void handleConnections(int server_fd) {
                 } else {
                     heartbeat = heartbeat + 1;
                 }
+                SSHDockerActive = true;
             }
 
             if(strcmp(buffer, "attacked") == 0) {
@@ -176,6 +200,8 @@ void handle11535Connections(int server_fd2) {
     if ((new_socket2 = accept(server_fd2, (struct sockaddr*)&address, &addrlen)) < 0) {
         perror("accept");
         exit(EXIT_FAILURE);
+    } else {
+        loginfo("11535 port initialized");
     }
 
     while(true) {
@@ -218,6 +244,8 @@ void handle8080Connections(int server_fd3) {
 }
 
 
+
+
 //////////////////////////////
 // REPORT GENERATING SCRIPT //
 //////////////////////////////
@@ -232,6 +260,27 @@ int createreport() {
 
     return(1);
 
+}
+
+
+
+
+
+
+
+
+int timedetector() {
+    startuptime = time(NULL);
+    currenttime = time(NULL);
+ //   timesincestartup = time(startuptime);
+
+    int excessseconds = currenttime % secondsperyear;
+    int numbyearsseconds = currenttime - excessseconds;
+    currentyear = 1970 + (numbyearsseconds / secondsperyear);
+
+ //   loginfo(currentyear);
+
+    return 0;
 }
 
 
@@ -254,9 +303,10 @@ int setup() {
     sendtolog("Program by Matthew Whitworth (MawWebby)");
     sendtolog("Version #: " + honeyversion);
     
-    // DELAY FOR SYSTEM TO START FURTHER
-    sleep(5);
+    // DELAY FOR SYSTEM TO START FURTHER (FIGURE OUT CURRENT TIME)
+    sleep(1);
 
+    startupchecks = startupchecks + timedetector();
 
 
     // DETERMINE NETWORK CONNECTIVITY
@@ -499,6 +549,7 @@ int setup() {
     sendtologopen("[INFO] - Starting Guest Docker Container (SSH) - ");
     sleep(2);
     int status = system(dockerstartguestssh);
+    sendtologclosed("Done");
 
 
 
@@ -557,7 +608,7 @@ int main() {
             logwarning("Guest VM has been attacked, reporting...");
         }
 
-        if (generatingreport == true) {
+        if (generatingreportSSH == true) {
             encounterederrors = createreport();
         }
         
@@ -570,13 +621,17 @@ int main() {
         std::cout << encounterederrors << std::endl;
         std::cout << erroroccurred << std::endl;
 
-        std::cout << usernames << std::endl;
-        std::cout << passwords << std::endl;
-        std::cout << keybinds << std::endl;
-        std::cout << fileschanged << std::endl;
-        std::cout << fileactions << std::endl;
-        std::cout << pubip << std::endl;
-        std::cout << port << std::endl;
+
+        std::cout << usernamesSSH << std::endl;
+        std::cout << passwordsSSH << std::endl;
+        std::cout << keybindsSSH << std::endl;
+        std::cout << fileschangedSSH << std::endl;
+        std::cout << fileactionsSSH << std::endl;
+        std::cout << pubipSSH << std::endl;
+        std::cout << portSSH << std::endl;
+        std::cout << pubkeysSSH << std::endl;
+        std::cout << prikeysSSH << std::endl;
+
 
         logcritical("ATTEMPTING TO KILL ALL DOCKER CONTAINERS!!!");
         close(serverport1);
