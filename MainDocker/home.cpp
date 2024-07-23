@@ -24,6 +24,7 @@
 using namespace std;
 
 const bool debug = false;
+const bool testing = false;
 
 
 
@@ -68,6 +69,7 @@ const int BUFFER_SIZE = 1024;
 int serverSocket1 = 0;
 int serverSocket2 = 0;
 int server_fd, new_socket;
+int server_fd2, new_socket2;
 bool packetactive = false;
 
 // TIME VARIABLES
@@ -589,6 +591,17 @@ int main() {
         return(1);
         return(1);
         return(1);
+    }
+
+    
+
+    if (testing == true) {
+        sendtologopen("[INFO] - Beta Testing Active...");
+        sleep(1);
+        sendtologclosed("Nothing to Test");
+    } else {
+        sendtolog("[INFO] - Not beta testing/Removing beta file...");
+        startupchecks = startupchecks + system("rm test");
     }
 
     loginfo("Main HoneyPi has started successfully");
