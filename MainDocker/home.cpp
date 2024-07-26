@@ -12,7 +12,7 @@
 
 using namespace std;
 
-const bool debug = false;
+const bool debug = true;
 const bool testing = false;
 
 
@@ -35,6 +35,9 @@ int heartbeat = 29;
 string erroroccurred = "";
 
 // DOCKER VARIABLES
+int timesincelastcheckinSSH = 0;
+long int lastcheckinSSH = 0;
+
 
 // REPORT VARIABLES - SSH
 bool SSHDockerActive = false;
@@ -58,6 +61,7 @@ const int BUFFER_SIZE = 1024;
 int serverSocket1 = 0;
 int serverSocket2 = 0;
 int server_fd, new_socket;
+int port1;
 int server_fd2, new_socket2;
 bool packetactive = false;
 
@@ -76,6 +80,8 @@ int secondspermonth = 2628288;
 int secondsperday = 86400;
 int secondsperhour = 3600;
 int secondsperminute = 60;
+long long int timers[10] = {};
+// 0 - RESTART SSH DOCKER VARIABLE
 
 
 
@@ -84,7 +90,10 @@ int secondsperminute = 60;
 //// DOCKER COMMANDS TO RUN ////
 ////////////////////////////////
 const char* dockerstatuscommand = "docker ps > nul:";
+//const char* dockerstartguestssh = "docker run -itd --rm --network=my-network1 --name=SSHVMV1 -p 22:22 honeypotpi:guestsshv1 > nul:";
 const char* dockerstartguestssh = "docker run -itd --rm --network=my-network1 --name=SSHVMV1 honeypotpi:guestsshv1 > nul:";
+
+const char* dockerstartguestsshNOREMOVE = "docker run -itd --network=my-network1 --name=SSHVMV1 -p 22:22 honeypotpi:guestsshv1 > nul:";
 
 
 
@@ -130,11 +139,15 @@ void handleConnections(int server_fd) {
     std::string hello = "Hello from server";
 
     if ((new_socket = accept(server_fd, (struct sockaddr*)&address, &addrlen)) < 0) {
+        if (SSHDockerActive == false) {
+            logcritical("SSH Docker Container Dead, Closing Port");
+            return;
+        }
         perror("accept");
         exit(EXIT_FAILURE);
     }
 
-    while(true) {
+    while(SSHDockerActive == true) {
         read(new_socket, buffer, 1024);
         if (debug == true) {
             sendtologopen(buffer);
@@ -142,8 +155,10 @@ void handleConnections(int server_fd) {
 
         if (buffer != NULL && attacked == false) {
 
+            
             // HEARTBEAT COMMAND TO NOT SPAM LOG
             if (strcmp(buffer, "heartbeatSSH") == 0) {
+                lastcheckinSSH = time(NULL);
                 if (heartbeat >= 30) {
                     loginfo("Received heartbeat from SSH Guest VM");
                     heartbeat = 0;
@@ -170,6 +185,10 @@ void handleConnections(int server_fd) {
         // Send a hello message to the client
 //        send(new_socket, hello.c_str(), hello.size(), 0);
 //        std::cout << "Hello message sent" << std::endl;
+
+        if (SSHDockerActive == false) {
+            logcritical("No SSH Docker Container/Killing Thread");
+        }
     }
 }
 
@@ -263,17 +282,58 @@ int createreport() {
 int timedetector() {
     startuptime = time(NULL);
     currenttime = time(NULL);
- //   timesincestartup = time(startuptime);
+    timesincestartup = currenttime - startuptime;
 
     int excessseconds = currenttime % secondsperyear;
     int numbyearsseconds = currenttime - excessseconds;
     currentyear = 1970 + (numbyearsseconds / secondsperyear);
 
  //   loginfo(currentyear);
+    std::cout << currentyear << std::endl;
 
     return 0;
 }
 
+
+int createnetworkport63599() {
+    int PORT = 63599;
+    int server_fd, new_socket;
+    ssize_t valread;
+    struct sockaddr_in address;
+    socklen_t addrlen = sizeof(address);
+    std::string hello = "Hello from server";
+    int opt = 1;
+
+    // SETUP NETWORK PORTS
+    if((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Forcefully attaching socket to the port 63599
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+
+    // REACHED HERE
+    sendtologopen("...");
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT);
+
+    // Binding the socket to the network address and port
+    if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+    if (listen(server_fd, 3) < 0) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+
+    return server_fd;
+}
 
 
 
@@ -417,58 +477,12 @@ int setup() {
     // OPEN NETWORK SERVER PORTS (1/3)
     sendtologopen("[INFO] - Opening Server Ports (1/3)");
 
-    int server_fd, new_socket;
-    ssize_t valread;
-    struct sockaddr_in address;
-    socklen_t addrlen = sizeof(address);
-    std::string hello = "Hello from server";
-    int opt = 1;
+    port1 = createnetworkport63599();
 
-    // SETUP NETWORK PORTS
-    if((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // Forcefully attaching socket to the port 63599
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-        perror("setsockopt");
-        exit(EXIT_FAILURE);
-    }
-
-    // REACHED HERE
-    sendtologopen("...");
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PORT);
-
-    // Binding the socket to the network address and port
-    if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-    if (listen(server_fd, 3) < 0) {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
+    std::cout << port1 << std::endl;
 
     sendtologclosed("Done");
     sleep(2);
-
-
-
-
-    // SERVER PORT LISTEN THREAD
-    sendtologopen("[INFO] - Creating server thread on port 63599 listen...");
-
-    sleep(2);
-    std::thread acceptingClientsThread(handleConnections, server_fd);
-    acceptingClientsThread.detach();
-    sleep(1);
-
-    sendtologclosed("Done");
-
-
 
 
 
@@ -492,7 +506,7 @@ int setup() {
         exit(EXIT_FAILURE);
     }
 
-    // Forcefully attaching socket to the port 63599
+    // Forcefully attaching socket to the port 11535
     if (setsockopt(server_fd2, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt2, sizeof(opt2))) {
         perror("setsockopt");
         exit(EXIT_FAILURE);
@@ -539,13 +553,40 @@ int setup() {
     // START GUEST DOCKER CONTAINER FOR SSH
     sendtologopen("[INFO] - Starting Guest Docker Container (SSH) - ");
     sleep(2);
-    int status = system(dockerstartguestssh);
+    int status;
+
+    if (debug == true) {
+        status = system(dockerstartguestsshNOREMOVE);
+    } else {
+        status = system(dockerstartguestssh);
+    }
+
+    if (status == 0) {
+        SSHDockerActive = true;
+        lastcheckinSSH = time(NULL) + 10;
+    } else {
+        status = system("docker container kill SSHVMV1");
+        sleep(3);
+        status = system("docker container rm SSHVMV1");
+        status = system(dockerstartguestssh);
+
+        if (status == 0) {
+            SSHDockerActive = true;
+            lastcheckinSSH = time(NULL) + 10;
+        } else {
+            SSHDockerActive = false;
+            lastcheckinSSH = 0;
+            logcritical("SSH DOCKER DID NOT START SUCCESSFULLY");
+        }
+    }
+
+    lastcheckinSSH = time(NULL);
     sendtologclosed("Done");
 
 
 
     // SYSTEM STARTED
-    sendtolog("[INFO] - Updating API Token...");
+    sendtologopen("[INFO] - Updating API Token...");
 
 
     // FUTURE NETWORK COMMUNICATION TO UPDATE API TOKENS
@@ -562,6 +603,16 @@ int main() {
 
     // SETUP LOOP
     setup();
+
+    // SERVER PORT LISTEN THREAD
+    sendtologopen("[INFO] - Creating server thread on port 63599 listen...");
+
+    sleep(2);
+    std::thread acceptingClientsThread(handleConnections, port1);
+    acceptingClientsThread.detach();
+    sleep(1);
+
+    sendtologclosed("Done");
 
     // STARTUP CHECKS
     if (startupchecks != 0) {
@@ -602,7 +653,7 @@ int main() {
 
     // MAIN RUNNING LOOP
     while(true && startupchecks == 0 && encounterederrors == 0) {
-        
+
         if (attacked == false) {
             sleep(2);
         } else {
@@ -613,7 +664,44 @@ int main() {
         if (generatingreportSSH == true) {
             encounterederrors = createreport();
         }
-        
+
+
+        // WATCHDOG IN MAIN LOOP
+        int differenceintimeSSH = time(NULL) - lastcheckinSSH;
+        if (SSHDockerActive == false) {
+            if (differenceintimeSSH >= 20) {
+                logwarning("20 seconds since last SSH Heartbeat received");
+            }
+
+            if (differenceintimeSSH >= 30) {
+                logcritical("30 seconds since last SSH Heartbeat received, assuming dead");
+                close(server_fd);
+                SSHDockerActive = false;
+                status = system("docker container kill SSHVMV1");
+                sleep(3);
+                encounterederrors = system("docker container rm SSHVMV1");
+                timers[0] = time(NULL);
+            }
+        } else {
+            if (timers[0] != 0) {
+                long long int changeintime = time(NULL) - timers[0];
+
+                if (changeintime >= 60) {
+                    logwarning("Attempting to restart SSH VM");
+                    encounterederrors = system(dockerstartguestssh);
+                    SSHDockerActive = true;
+                    lastcheckinSSH = time(NULL) + 10;
+                    port1 = createnetworkport63599();
+                    sleep(2);
+                    std::thread acceptingClientsThread(handleConnections, port1);
+                    acceptingClientsThread.detach();
+                }
+            } else {
+                logwarning("Attempting to restart in 60 seconds!");
+                timers[0] = time(NULL);
+            }
+        }
+
     }
 
     // ENCOUNTERED ERRORS
