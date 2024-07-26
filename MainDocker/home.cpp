@@ -12,7 +12,7 @@
 
 using namespace std;
 
-const bool debug = true;
+const bool debug = false;
 const bool testing = false;
 
 
@@ -33,6 +33,7 @@ bool attacked = false;
 bool systemup = false;
 int heartbeat = 29;
 string erroroccurred = "";
+int packetsreceivedSSH = 0;
 
 // DOCKER VARIABLES
 int timesincelastcheckinSSH = 0;
@@ -82,6 +83,8 @@ int secondsperhour = 3600;
 int secondsperminute = 60;
 long long int timers[10] = {};
 // 0 - RESTART SSH DOCKER VARIABLE
+// 1 - TIMER TO STOP BUFFER OVERFLOW ON SSH DOCKER AND CAUSE CPU CRASH
+
 
 
 
@@ -90,10 +93,10 @@ long long int timers[10] = {};
 //// DOCKER COMMANDS TO RUN ////
 ////////////////////////////////
 const char* dockerstatuscommand = "docker ps > nul:";
-//const char* dockerstartguestssh = "docker run -itd --rm --network=my-network1 --name=SSHVMV1 -p 22:22 honeypotpi:guestsshv1 > nul:";
-const char* dockerstartguestssh = "docker run -itd --rm --network=my-network1 --name=SSHVMV1 honeypotpi:guestsshv1 > nul:";
-
+const char* dockerstartguestssh = "docker run -itd --rm --network=my-network1 --name=SSHVMV1 -p 22:22 honeypotpi:guestsshv1 > nul:";
 const char* dockerstartguestsshNOREMOVE = "docker run -itd --network=my-network1 --name=SSHVMV1 -p 22:22 honeypotpi:guestsshv1 > nul:";
+const char* dockerkillguestssh = "docker container kill SSHVMV1 > nul:";
+const char* dockerremoveguestssh = "dockercontainer rm SSHVMV1 > nul:";
 
 
 
@@ -147,6 +150,8 @@ void handleConnections(int server_fd) {
         exit(EXIT_FAILURE);
     }
 
+    timers[1] = time(NULL);
+
     while(SSHDockerActive == true) {
         read(new_socket, buffer, 1024);
         if (debug == true) {
@@ -175,6 +180,8 @@ void handleConnections(int server_fd) {
         } else {
             if (buffer != NULL && attacked == true) {
 
+                // ADD COMMANDS HERE OF BEING ATTACKED AND STORING THAT DATA
+
             } else {
                 if (buffer == NULL) {
                     logcritical("INVALID CONNECTION RECEIVED, ignoring...");
@@ -188,6 +195,24 @@ void handleConnections(int server_fd) {
 
         if (SSHDockerActive == false) {
             logcritical("No SSH Docker Container/Killing Thread");
+        }
+
+        // ANTI-CRASH PACKET FLOW CHECK
+        if (timers[1] == time(NULL)) {
+            packetsreceivedSSH = packetsreceivedSSH + 1;
+            if (packetsreceivedSSH == 10) {
+                // KILL CONTAINER
+                logcritical("PACKET OVERFLOW DETECTED ON SSH DOCKER PORT!/KILLING THREAD AND CONTAINER!");
+                close(server_fd);
+                timers[0] = time(NULL);
+                SSHDockerActive = false;
+                system(dockerkillguestssh);
+                sleep(3);
+                system(dockerremoveguestssh);
+            }
+        } else {
+            timers[1] = time(NULL);
+            packetsreceivedSSH = 0;
         }
     }
 }
@@ -479,8 +504,6 @@ int setup() {
 
     port1 = createnetworkport63599();
 
-    std::cout << port1 << std::endl;
-
     sendtologclosed("Done");
     sleep(2);
 
@@ -564,24 +587,23 @@ int setup() {
     if (status == 0) {
         SSHDockerActive = true;
         lastcheckinSSH = time(NULL) + 10;
+        sendtologclosed("Done");
     } else {
-        status = system("docker container kill SSHVMV1");
+        status = system(dockerkillguestssh);
         sleep(3);
-        status = system("docker container rm SSHVMV1");
+        status = system(dockerremoveguestssh);
         status = system(dockerstartguestssh);
 
         if (status == 0) {
             SSHDockerActive = true;
             lastcheckinSSH = time(NULL) + 10;
+            sendtologclosed("Done");
         } else {
             SSHDockerActive = false;
             lastcheckinSSH = 0;
             logcritical("SSH DOCKER DID NOT START SUCCESSFULLY");
         }
     }
-
-    lastcheckinSSH = time(NULL);
-    sendtologclosed("Done");
 
 
 
@@ -596,8 +618,12 @@ int setup() {
     
     
     return 0;
-
 }
+
+
+
+
+
 
 int main() {
 
@@ -624,7 +650,7 @@ int main() {
         close(serverport1);
         close(serverport2);
         sleep(10);
-        int completion = system("docker kill *");
+        int completion = system("docker kill * > nul:");
         sleep(10);
 
         // EXIT AND STOP PROCESSES
@@ -662,24 +688,24 @@ int main() {
         }
 
         if (generatingreportSSH == true) {
-            encounterederrors = createreport();
+            encounterederrors = encounterederrors + createreport();
         }
 
 
         // WATCHDOG IN MAIN LOOP
         int differenceintimeSSH = time(NULL) - lastcheckinSSH;
-        if (SSHDockerActive == false) {
-            if (differenceintimeSSH >= 20) {
-                logwarning("20 seconds since last SSH Heartbeat received");
+        if (SSHDockerActive == true) {
+            if (differenceintimeSSH >= 30) {
+                logwarning("30 seconds since last SSH Heartbeat received");
             }
 
-            if (differenceintimeSSH >= 30) {
-                logcritical("30 seconds since last SSH Heartbeat received, assuming dead");
+            if (differenceintimeSSH >= 45) {
+                logcritical("45 seconds since last SSH Heartbeat received, assuming dead");
                 close(server_fd);
                 SSHDockerActive = false;
-                status = system("docker container kill SSHVMV1");
+                system(dockerkillguestssh);
                 sleep(3);
-                encounterederrors = system("docker container rm SSHVMV1");
+                system(dockerremoveguestssh);
                 timers[0] = time(NULL);
             }
         } else {
@@ -688,7 +714,11 @@ int main() {
 
                 if (changeintime >= 60) {
                     logwarning("Attempting to restart SSH VM");
-                    encounterederrors = system(dockerstartguestssh);
+                    system(dockerkillguestssh);
+                    sleep(3);
+                    system(dockerremoveguestssh);
+                    sleep(3);
+                    system(dockerstartguestssh);
                     SSHDockerActive = true;
                     lastcheckinSSH = time(NULL) + 10;
                     port1 = createnetworkport63599();
@@ -727,7 +757,7 @@ int main() {
         close(serverport1);
         close(serverport2);
         sleep(10);
-        int completion = system("docker kill *");
+        int completion = system("docker kill * > nul:");
         sleep(10);
     }
 }
