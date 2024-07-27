@@ -84,6 +84,7 @@ int secondsperminute = 60;
 long long int timers[10] = {};
 // 0 - RESTART SSH DOCKER VARIABLE
 // 1 - TIMER TO STOP BUFFER OVERFLOW ON SSH DOCKER AND CAUSE CPU CRASH
+// 2 - TIMER TO STOP BUFFER OVERFLOW ON ROUTER API PORT
 
 
 
@@ -93,10 +94,10 @@ long long int timers[10] = {};
 //// DOCKER COMMANDS TO RUN ////
 ////////////////////////////////
 const char* dockerstatuscommand = "docker ps > nul:";
-const char* dockerstartguestssh = "docker run -itd --rm --network=my-network1 --name=SSHVMV1 -p 22:22 honeypotpi:guestsshv1 > nul:";
-const char* dockerstartguestsshNOREMOVE = "docker run -itd --network=my-network1 --name=SSHVMV1 -p 22:22 honeypotpi:guestsshv1 > nul:";
+const char* dockerstartguestssh = "docker run -itd --rm --network=my-network1 --name=SSHVMV1 --network=host -p 22:22 honeypotpi:guestsshv1 > nul:";
+const char* dockerstartguestsshNOREMOVE = "docker run -itd --network=my-network1 --name=SSHVMV1 --network=host -p 22:22 honeypotpi:guestsshv1 > nul:";
 const char* dockerkillguestssh = "docker container kill SSHVMV1 > nul:";
-const char* dockerremoveguestssh = "dockercontainer rm SSHVMV1 > nul:";
+const char* dockerremoveguestssh = "docker container rm SSHVMV1 > nul:";
 
 
 
@@ -374,7 +375,7 @@ int createnetworkport63599() {
 // THE MAIN SETUP SCRIPTS //
 //////////////////////////// 
 int setup() {
-    sendtolog("Hello, World");
+    sendtolog("Hello, World from 2515");
     sendtolog("HoneyPi - MAIN Docker");
     sendtolog("Program by Matthew Whitworth (MawWebby)");
     sendtolog("Version #: " + honeyversion);
