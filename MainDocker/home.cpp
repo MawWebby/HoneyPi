@@ -34,6 +34,7 @@ bool systemup = false;
 int heartbeat = 29;
 string erroroccurred = "";
 int packetsreceivedSSH = 0;
+int packetsreceivedAPI = 0;
 
 // DOCKER VARIABLES
 int timesincelastcheckinSSH = 0;
@@ -83,8 +84,8 @@ int secondsperhour = 3600;
 int secondsperminute = 60;
 long long int timers[10] = {};
 // 0 - RESTART SSH DOCKER VARIABLE
-// 1 - TIMER TO STOP BUFFER OVERFLOW ON SSH DOCKER AND CAUSE CPU CRASH
-// 2 - TIMER TO STOP BUFFER OVERFLOW ON ROUTER API PORT
+// 1 - TIMER TO STOP BUFFER OVERFLOW ON SSH (63599) DOCKER AND CAUSE CPU CRASH
+// 2 - TIMER TO STOP BUFFER OVERFLOW ON ROUTER API (11535) PORT
 
 
 
@@ -201,7 +202,7 @@ void handleConnections(int server_fd) {
         // ANTI-CRASH PACKET FLOW CHECK
         if (timers[1] == time(NULL)) {
             packetsreceivedSSH = packetsreceivedSSH + 1;
-            if (packetsreceivedSSH == 10) {
+            if (packetsreceivedSSH >= 10) {
                 // KILL CONTAINER
                 logcritical("PACKET OVERFLOW DETECTED ON SSH DOCKER PORT!/KILLING THREAD AND CONTAINER!");
                 close(server_fd);
@@ -264,6 +265,22 @@ void handle11535Connections(int server_fd2) {
                 }
             }
         }
+
+
+        // ANTI-CRASH PACKET FLOW CHECK
+        if (timers[2] == time(NULL)) {
+            packetsreceivedAPI = packetsreceivedAPI + 1;
+            if (packetsreceivedAPI >= 10) {
+                // KILL CONTAINER
+                logcritical("PACKET OVERFLOW DETECTED ON ROUTER API!");
+                close(server_fd2);
+            }
+        } else {
+            timers[2] = time(NULL);
+            packetsreceivedAPI = 0;
+        }
+
+
 
  //        Send a hello message to the client
          send(new_socket2, hello.c_str(), hello.size(), 0);
