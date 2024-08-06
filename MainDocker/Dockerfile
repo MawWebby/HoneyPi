@@ -11,6 +11,11 @@ RUN apt-get install -y iputils-ping curl bash
 # REMOVE UNNEEDED PACKAGES
 RUN apt-get remove openssh-server -y
 
+# Expose Needed Ports
+EXPOSE 63599
+EXPOSE 11535
+#EXPOSE 9090
+
 # Set Working Directory
 COPY . /usr/src/honeypi
 WORKDIR /usr/src/honeypi

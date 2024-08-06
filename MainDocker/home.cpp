@@ -95,8 +95,8 @@ long long int timers[10] = {};
 //// DOCKER COMMANDS TO RUN ////
 ////////////////////////////////
 const char* dockerstatuscommand = "docker ps > nul:";
-const char* dockerstartguestssh = "docker run -itd --rm --network=my-network1 --name=SSHVMV1 --network=host -p 22:22 honeypotpi:guestsshv1 > nul:";
-const char* dockerstartguestsshNOREMOVE = "docker run -itd --network=my-network1 --name=SSHVMV1 --network=host -p 22:22 honeypotpi:guestsshv1 > nul:";
+const char* dockerstartguestssh = "docker run -itd --rm --name=SSHVMV1 -p 22:22 --network=my-network1 honeypotpi:guestsshv1 > nul:";
+const char* dockerstartguestsshNOREMOVE = "docker run -itd --name=SSHVMV1 -p 22:22 --network=my-network1 honeypotpi:guestsshv1 > nul:";
 const char* dockerkillguestssh = "docker container kill SSHVMV1 > nul:";
 const char* dockerremoveguestssh = "docker container rm SSHVMV1 > nul:";
 
@@ -159,6 +159,8 @@ void handleConnections(int server_fd) {
         if (debug == true) {
             sendtologopen(buffer);
         }
+
+        loginfo(buffer);
 
         if (buffer != NULL && attacked == false) {
 
