@@ -1,0 +1,26 @@
+standards:
+ - debug = false
+ - beta = false
+ - networktest = false # NOT CURRENTLY IMPLEMENTED
+
+modes:
+ - sshd = true
+ - betaversions = false
+
+API_KEY:
+ - apikey = 
+
+port_blocking:
+ - status = f
+ - 9000 = f
+ - 9001 = f
+ - 9002 = f
+ - 9003 = f
+ - 9004 = f
+ - 9005 = f
+ - 9006 = f
+ - 9007 = f
+ - 9008 = f
+ - 9009 = f
+ - 9010 = f
+
