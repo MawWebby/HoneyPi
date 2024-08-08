@@ -9,6 +9,7 @@
 #include <fstream>
 #include <thread>
 #include <ctime>
+#include <map>
 
 using namespace std;
 
@@ -88,7 +89,88 @@ int secondsperhour = 3600;
 int secondsperminute = 60;
 int minutesperhour = 60;
 int hoursperday = 24;
+bool calculatingtime = false;
 
+
+// PORT BLOCKING VARIABLES
+map<int, int> blockportdictionary = {
+    {0, 9000},
+    {1, 9001},
+    {2, 9002},
+    {3, 9003},
+    {4, 9004},
+    {5, 9005},
+    {6, 9006},
+    {7, 9007},
+    {8, 9008},
+    {9, 9009},
+    {10, 9010},
+};
+map<int, int> serversocketdictionary = {
+    {0, 0},
+    {1, 0},
+    {2, 0},
+    {3, 0},
+    {4, 0},
+    {5, 0},
+    {6, 0},
+    {7, 0},
+    {8, 0},
+    {9, 0},
+    {10, 0},
+};
+map<int, int> serverSocketdictionary = {
+    {0, 0},
+    {1, 0},
+    {2, 0},
+    {3, 0},
+    {4, 0},
+    {5, 0},
+    {6, 0},
+    {7, 0},
+    {8, 0},
+    {9, 0},
+    {10, 0},
+};
+map<int, int> server_fddictionary = {
+    {0, 0},
+    {1, 0},
+    {2, 0},
+    {3, 0},
+    {4, 0},
+    {5, 0},
+    {6, 0},
+    {7, 0},
+    {8, 0},
+    {9, 0},
+    {10, 0},
+};
+map<int, int> new_socketdictionary = {
+    {0, 0},
+    {1, 0},
+    {2, 0},
+    {3, 0},
+    {4, 0},
+    {5, 0},
+    {6, 0},
+    {7, 0},
+    {8, 0},
+    {9, 0},
+    {10, 0},
+};
+map<int, bool> serverportsactive = {
+    {0, false},
+    {1, false},
+    {2, false},
+    {3, false},
+    {4, false},
+    {5, false},
+    {6, false},
+    {7, false},
+    {8, false},
+    {9, false},
+    {10, false},
+};
 
 
 long long int timers[10] = {};
