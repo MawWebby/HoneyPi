@@ -1,26 +1,82 @@
-standards:
+SYSTEM:
  - debug = false
  - beta = false
  - networktest = false # NOT CURRENTLY IMPLEMENTED
+ - website = true
 
-modes:
+MODES:
  - sshd = true
  - betaversions = false
 
 API_KEY:
  - apikey = 
 
-port_blocking:
- - status = f
- - 9000 = f
- - 9001 = f
- - 9002 = f
- - 9003 = f
- - 9004 = f
- - 9005 = f
- - 9006 = f
- - 9007 = f
- - 9008 = f
- - 9009 = f
- - 9010 = f
+UPDATE_FREQUENCY:
+ - update = 3600
 
+PING:
+ - enabled = true
+ - pingaddressexclusion = "none"
+ - pingfrequency = 300
+
+PORT_BLOCKING:
+ - status = f
+ - 9000
+    - enabled = false
+    - sendtraffic = 9000
+    - blocklist = true
+    - standard = UDP
+ - 9001
+    - enabled = false
+    - sendtraffic = 9001
+    - blocklist = true
+    - standard = UDP
+ - 9002
+    - enabled = false
+    - sendtraffic = 9002
+    - blocklist = true
+    - standard = UDP
+ - 9003
+    - enabled = false
+    - sendtraffic = 9003
+    - blocklist = true
+    - standard = UDP
+ - 9004
+    - enabled = false
+    - sendtraffic = 9004
+    - blocklist = true
+    - standard = UDP
+ - 9005
+    - enabled = false
+    - sendtraffic = 9005
+    - blocklist = true
+    - standard = TCP
+ - 9006
+    - enabled = false
+    - sendtraffic = 9006
+    - blocklist = true
+    - standard = TCP
+ - 9007
+    - enabled = false
+    - sendtraffic = 9007
+    - blocklist = true
+    - standard = TCP
+ - 9008
+    - enabled = false
+    - sendtraffic = 9008
+    - blocklist = true
+    - standard = TCP
+ - 9009
+    - enabled = false
+    - sendtraffic = 9009
+    - blocklist = true
+    - standard = TCP
+ - 9010
+    - enabled = false
+    - sendtraffic = 9010
+    - blocklist = true
+    - standard = SSH
+ 
+DEBUGGING:
+ - avoid_first_watchdog = false
+ - 
