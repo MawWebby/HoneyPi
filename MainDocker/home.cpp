@@ -878,19 +878,36 @@ int main() {
         // WATCHDOG IN MAIN LOOP
         int differenceintimeSSH = time(NULL) - lastcheckinSSH;
         if (SSHDockerActive == true) {
-            if (differenceintimeSSH >= 30) {
-                logwarning("30 seconds since last SSH Heartbeat received");
-            }
+            if (heartbeatreceivedrsttimeSSH == true) {
+                if (differenceintimeSSH >= 30) {
+                    logwarning("30 seconds since last SSH Heartbeat received");
+                }
 
-            if (differenceintimeSSH >= 45) {
-                logcritical("45 seconds since last SSH Heartbeat received, assuming dead");
-                close(server_fd);
-                SSHDockerActive = false;
-                system(dockerkillguestssh);
-                sleep(3);
-                system(dockerremoveguestssh);
-                timers[0] = time(NULL);
+                if (differenceintimeSSH >= 45) {
+                    logcritical("45 seconds since last SSH Heartbeat received, assuming dead");
+                    close(server_fd);
+                    SSHDockerActive = false;
+                    system(dockerkillguestssh);
+                    sleep(3);
+                    system(dockerremoveguestssh);
+                    timers[0] = time(NULL);
+                }
+            } else {
+                if (differenceintimeSSH >= 240) {
+                    logwarning("240 seconds since first expected SSH Heartbeat received");
+                }
+
+                if (differenceintimeSSH >= 300) {
+                    logcritical("300 seconds since first expected SSH Heartbeat received, assuming dead");
+                    close(server_fd);
+                    SSHDockerActive = false;
+                    system(dockerkillguestssh);
+                    sleep(3);
+                    system(dockerremoveguestssh);
+                    timers[0] = time(NULL);
+                }
             }
+            
         } else {
             if (timers[0] != 0) {
                 long long int changeintime = time(NULL) - timers[0];
