@@ -35,6 +35,7 @@ int heartbeat = 29;
 string erroroccurred = "";
 int packetsreceivedSSH = 0;
 int packetsreceivedAPI = 0;
+bool heartbeatreceivedrsttimeSSH = false;
 
 // DOCKER VARIABLES
 int timesincelastcheckinSSH = 0;
@@ -62,9 +63,11 @@ const int serverport3 = 11520;
 const int BUFFER_SIZE = 1024;
 int serverSocket1 = 0;
 int serverSocket2 = 0;
+int serverSocket3 = 0;
 int server_fd, new_socket;
 int port1;
 int server_fd2, new_socket2;
+int server_fd3, new_scoket3;
 bool packetactive = false;
 
 // TIME VARIABLES
@@ -188,6 +191,11 @@ void logcritical(string data2) {
     data2 = "[CRITICAL] - " + data2;
     sendtolog(data2);
 }
+
+
+
+
+
 
 
 
@@ -441,13 +449,36 @@ int createnetworkport63599() {
 // THE MAIN SETUP SCRIPTS //
 //////////////////////////// 
 int setup() {
-    sendtolog("Hello, World from 2515");
-    sendtolog("HoneyPi - MAIN Docker");
+    sendtolog("Hello, World from 2515!");
+    sendtolog("  _____     _____     ____________      _____      ____  ________________   ____         ____           ______________     ________________  ");
+    sendtolog("  |   |     |   |    /            `     |   `      |  |  |               |  `  `        /   /           |             `   |               |  ");
+    sendtolog("  |   |     |   |   /              `    |    `     |  |  |  |¯¯¯¯¯¯¯¯¯¯¯¯    `  `      /   /            |   |¯¯¯¯¯¯`   |  |_____    ______|  ");
+    sendtolog("  |   |     |   |  /   /¯¯¯¯¯¯¯¯`   `   |     `    |  |  |  |____________     `  `    /   /             |   |______/   |        |   |        ");
+    sendtolog("  |    ¯¯¯¯¯    |  |   |         |   |  |      `   |  |  |               |     `  `  /   /              |   __________/         |   |        ");
+    sendtolog("  |    _____    |  |   |         |   |  |   |`  `  |  |  |               |      `  `/   /               |   |                   |   |        ");
+    sendtolog("  |   |     |   |  |   |         |   |  |   | `  ` |  |  |  |¯¯¯¯¯¯¯¯¯¯¯¯        |     |                |   |                   |   |        ");
+    sendtolog("  |   |     |   |  |   |         |   |  |   |  `  `|  |  |  |____________        |     |                |   |                   |   |        ");
+    sendtolog("  |   |     |   |  `   `¯¯¯¯¯¯¯¯¯    /  |   |   `     |  |               |       |     |                |   |             |¯¯¯¯¯     ¯¯¯¯¯|  ");
+    sendtolog("  |   |     |   |   `               /   |   |    `    |  |               |       |     |                |   |             |               |  ");
+    sendtolog("  ¯¯¯¯¯     ¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯      `¯¯¯   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯        ¯¯¯¯¯¯                 ¯¯¯¯¯             ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯   ");
+    sendtolog("SERVER EDITION!");
+    sendtolog("");
+    sendtolog("");
+    sendtolog("");
+    sendtolog("");
+    sendtolog("");
     sendtolog("Program by Matthew Whitworth (MawWebby)");
-    sendtolog("Version #: " + honeyversion);
+    sendtolog("Version: " + honeyversion);
+    sendtolog("");
+    sendtolog("");
+    sendtolog("");
+    sendtolog("");
+    sendtolog("");
     
     // DELAY FOR SYSTEM TO START FURTHER (FIGURE OUT CURRENT TIME)
-    sleep(1);
+    sleep(4);
+
+    loginfo("Starting");
 
     startupchecks = startupchecks + timedetector();
 
@@ -659,6 +690,7 @@ int setup() {
         status = system(dockerkillguestssh);
         sleep(3);
         status = system(dockerremoveguestssh);
+        sleep(1);
         status = system(dockerstartguestssh);
 
         if (status == 0) {
@@ -681,6 +713,8 @@ int setup() {
     // FUTURE NETWORK COMMUNICATION TO UPDATE API TOKENS
 
     sendtolog("future");
+
+    sendtologopen("[INFO] - Starting Port Blocking Service!");
 
     
     
