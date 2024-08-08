@@ -75,13 +75,19 @@ int currenthour = 0;
 int currentminute = 0;
 int currentsecond = 0;
 int currentdayofyear = 0;
+int currentdays = 0;
 int currentyear = 0;
 int currentmonth = 0;
-int secondsperyear = 3153600;
-int secondspermonth = 2628288;
+int secondsperyear = 31536000;
+int daysperyear = 365.25;
 int secondsperday = 86400;
 int secondsperhour = 3600;
 int secondsperminute = 60;
+int minutesperhour = 60;
+int hoursperday = 24;
+
+
+
 long long int timers[10] = {};
 // 0 - RESTART SSH DOCKER VARIABLE
 // 1 - TIMER TO STOP BUFFER OVERFLOW ON SSH (63599) DOCKER AND CAUSE CPU CRASH
@@ -99,6 +105,61 @@ const char* dockerstartguestssh = "docker run -itd --rm --name=SSHVMV1 -p 22:22 
 const char* dockerstartguestsshNOREMOVE = "docker run -itd --name=SSHVMV1 -p 22:22 --network=my-network1 honeypotpi:guestsshv1 > nul:";
 const char* dockerkillguestssh = "docker container kill SSHVMV1 > nul:";
 const char* dockerremoveguestssh = "docker container rm SSHVMV1 > nul:";
+
+
+
+
+
+
+
+
+int timedetector() {
+    if (calculatingtime == true) {
+        std::cout << "[WARNING] - Call to Time Calculation Called While Already Processing!" << std::endl;
+        return 1;
+
+    }  else {
+        // TIME
+        currenttime = time(NULL);
+
+        // CURRENT SECONDS
+        timesincestartup = currenttime - startuptime;
+        currentsecond = currenttime % secondsperminute;
+
+        // CURRENT MINUTES
+        currentminute = currenttime - currentsecond;
+        currentminute = currentminute % 3600;
+        currentminute = currentminute / 60;
+
+        // CURRENT HOURS
+        currenthour = currenttime - ((currentminute * 60) + currentsecond);
+        currenthour = currenthour % hoursperday;
+        
+        // CURRENT DAYS
+        currentdays = currenttime - ((currenthour * 3600) + (currentminute * 60) + currentsecond);
+        currentdays = currentdays / 86400;
+
+        // CURRENT YEARS
+        currentyear = 1970 + (currentdays / 365.25);
+
+        // DEBUG PRINT VALUES TO CONSOLE
+        if (debug == true) {
+            std::cout << currentsecond << std::endl;
+            std::cout << currentminute << std::endl;
+            std::cout << currenthour << std::endl;
+            std::cout << currentdays << std::endl;
+            std::cout << currentyear << std::endl;
+        }
+
+        return 0;
+    }
+
+    return 1;
+}
+
+
+
+
 
 
 
@@ -324,20 +385,6 @@ int createreport() {
 
 
 
-int timedetector() {
-    startuptime = time(NULL);
-    currenttime = time(NULL);
-    timesincestartup = currenttime - startuptime;
-
-    int excessseconds = currenttime % secondsperyear;
-    int numbyearsseconds = currenttime - excessseconds;
-    currentyear = 1970 + (numbyearsseconds / secondsperyear);
-
- //   loginfo(currentyear);
-    std::cout << currentyear << std::endl;
-
-    return 0;
-}
 
 
 int createnetworkport63599() {
