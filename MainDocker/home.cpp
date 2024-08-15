@@ -91,6 +91,10 @@ int minutesperhour = 60;
 int hoursperday = 24;
 bool calculatingtime = false;
 
+// FILE LOCATIONS
+const char* SSHStreamFile = "/home/sshfile.txt";
+const char* SSHEncryptedFile = "/home/encryptedssh.txt";
+
 
 // PORT BLOCKING VARIABLES
 map<int, int> blockportdictionary = {
@@ -106,18 +110,18 @@ map<int, int> blockportdictionary = {
     {9, 9009},
     {10, 9010},
 };
-map<int, int> serversocketdictionary = {
-    {0, 0},
-    {1, 0},
-    {2, 0},
-    {3, 0},
-    {4, 0},
-    {5, 0},
-    {6, 0},
-    {7, 0},
-    {8, 0},
-    {9, 0},
-    {10, 0},
+map<int, int> sendportdictionary = {
+    {0, 9010},
+    {1, 9011},
+    {2, 9012},
+    {3, 9013},
+    {4, 9014},
+    {5, 9015},
+    {6, 9016},
+    {7, 9017},
+    {8, 9018},
+    {9, 9019},
+    {10, 9020},
 };
 map<int, int> serverSocketdictionary = {
     {0, 0},
@@ -460,12 +464,45 @@ int createreport() {
 
     sleep(5);
 
+    // OPEN FILE
+    std::ifstream inputStream;
+    inputStream.open(SSHStreamFile);
+    std::ofstream encryptedStream;
+    encryptedStream.open(SSHEncryptedFile);
+    if (inputStream.is_open != true && encryptedStream != true) {
+        logcritical("AN ERROR OCCURRED WITH THE SSH FILE!");
+        logcritical("COULD NOT CONTINUE");
+        encounterederrors = encounterederrors + 1;
+        return 1;
+        return 1;
+    } else {
+        std::string inputstring;
+        std::string encryptedstring;
+        std::string key = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        std::string compressedkey = "zxywv";
+        encryptedStream << compressedkey << '\n';
+        int testtastic = 0;
+        int testtasticmax = 5;
+        bool completion31 = false;
+        while (completion31 != true) {
+            getline(inputStream, inputstring);
+            if (inputstring == "") {
+                testtastic = testtastic + 1;
+                if (testtastic >= testtasticmax) {
+                    completion31 = true;
+                }
+            } else {
+                int hat = 0;
+                while (inputstring.length() >= hat) {
+                    // HAT TWO THIRTY
+                }
+            }
+        }
 
-    // SAVE TO FILE
- //   myFile << "hello\n";
+        // SEND TO SERVER!
+    }
 
-    return(1);
-
+    return 1;
 }
 
 
