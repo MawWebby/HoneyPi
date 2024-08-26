@@ -469,7 +469,7 @@ int createreport() {
     inputStream.open(SSHStreamFile);
     std::ofstream encryptedStream;
     encryptedStream.open(SSHEncryptedFile);
-    if (inputStream.is_open != true && encryptedStream != true) {
+    if (inputStream.is_open() != true && encryptedStream.is_open() != true) {
         logcritical("AN ERROR OCCURRED WITH THE SSH FILE!");
         logcritical("COULD NOT CONTINUE");
         encounterederrors = encounterederrors + 1;
