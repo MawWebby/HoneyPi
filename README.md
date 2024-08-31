@@ -1,5 +1,4 @@
 <h1>This project is in early development.</h1>
-<h3>I am targeting a launch date at the end of September</h3>
 
 </br>
 <h1>HoneyPi</h1>
