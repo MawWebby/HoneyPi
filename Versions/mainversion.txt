@@ -1,2 +1,4 @@
-supportedversion = 0.1;0.1.1
-latest = 0.1.1
+supportedversion = 0.1.0;0.1.1
+latest.main = 0.1.0
+latest.beta = 0.1.1
+latest.test = 0.1.1
