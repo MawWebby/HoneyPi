@@ -11,8 +11,6 @@
 #include <ctime>
 #include <map>
 
-using namespace std;
-
 const bool debug = false;
 const bool testing = false;
 
@@ -23,7 +21,7 @@ const bool testing = false;
 /////////////////
 
 // CONSTANT VARIABLES
-const string honeyversion = "0.0.2";
+const std::string honeyversion = "0.0.2";
 const int heartbeattime = 10;
 
 // SYSTEM VARIABLES
@@ -33,7 +31,7 @@ int encounterederrors = 0;
 bool attacked = false;
 bool systemup = false;
 int heartbeat = 29;
-string erroroccurred = "";
+std::string erroroccurred = "";
 int packetsreceivedSSH = 0;
 int packetsreceivedAPI = 0;
 bool heartbeatreceivedrsttimeSSH = false;
@@ -46,16 +44,16 @@ long int lastcheckinSSH = 0;
 // REPORT VARIABLES - SSH
 bool SSHDockerActive = false;
 bool generatingreportSSH = false;
-string pubipSSH = "0.0.0.0";
+std::string pubipSSH = "0.0.0.0";
 int portSSH = 0;
-string usernamesSSH[101] = {};
-string passwordsSSH[101] = {};
-string keybindsSSH[1000] = {};
-string fileschangedSSH[101] = {};
-string fileactionsSSH[101] = {};
-string pubkeysSSH[101] = {};
-string prikeysSSH[101] = {};
-string commandsrunSSH[1001] = {};
+std::string usernamesSSH[101] = {};
+std::string passwordsSSH[101] = {};
+std::string keybindsSSH[1000] = {};
+std::string fileschangedSSH[101] = {};
+std::string fileactionsSSH[101] = {};
+std::string pubkeysSSH[101] = {};
+std::string prikeysSSH[101] = {};
+std::string commandsrunSSH[1001] = {};
 
 // NETWORK VARIABLES
 const int serverport1 = 63599;
@@ -97,7 +95,7 @@ const char* SSHEncryptedFile = "/home/encryptedssh.txt";
 
 
 // PORT BLOCKING VARIABLES
-map<int, int> blockportdictionary = {
+std::map<int, int> blockportdictionary = {
     {0, 9000},
     {1, 9001},
     {2, 9002},
@@ -110,7 +108,7 @@ map<int, int> blockportdictionary = {
     {9, 9009},
     {10, 9010},
 };
-map<int, int> sendportdictionary = {
+std::map<int, int> sendportdictionary = {
     {0, 9010},
     {1, 9011},
     {2, 9012},
@@ -123,7 +121,7 @@ map<int, int> sendportdictionary = {
     {9, 9019},
     {10, 9020},
 };
-map<int, int> serverSocketdictionary = {
+std::map<int, int> serverSocketdictionary = {
     {0, 0},
     {1, 0},
     {2, 0},
@@ -136,7 +134,7 @@ map<int, int> serverSocketdictionary = {
     {9, 0},
     {10, 0},
 };
-map<int, int> server_fddictionary = {
+std::map<int, int> server_fddictionary = {
     {0, 0},
     {1, 0},
     {2, 0},
@@ -149,7 +147,7 @@ map<int, int> server_fddictionary = {
     {9, 0},
     {10, 0},
 };
-map<int, int> new_socketdictionary = {
+std::map<int, int> new_socketdictionary = {
     {0, 0},
     {1, 0},
     {2, 0},
@@ -162,7 +160,7 @@ map<int, int> new_socketdictionary = {
     {9, 0},
     {10, 0},
 };
-map<int, bool> serverportsactive = {
+std::map<int, bool> serverportsactive = {
     {0, false},
     {1, false},
     {2, false},
@@ -256,24 +254,24 @@ int timedetector() {
 ////////////////////////////
 // Send to Logger Scripts //
 ////////////////////////////
-void sendtolog(string data2) {
+void sendtolog(std::string data2) {
     std::cout << data2 << std::endl;
 }
-void sendtologopen(string data2) {
+void sendtologopen(std::string data2) {
     std::cout << data2;
 }
-void sendtologclosed(string data2) {
+void sendtologclosed(std::string data2) {
     std::cout << data2 << std::endl;
 }
-void loginfo(string data2) {
+void loginfo(std::string data2) {
     data2 = "[INFO] - " + data2;
     sendtolog(data2);
 }
-void logwarning(string data2) {
+void logwarning(std::string data2) {
     data2 = "[WARNING] - " + data2;
     sendtolog(data2);
 }
-void logcritical(string data2) {
+void logcritical(std::string data2) {
     data2 = "[CRITICAL] - " + data2;
     sendtolog(data2);
 }
