@@ -1,3 +1,2 @@
-supported versions = 0.1.0
 latest.main = 0.1.0
 latest.beta = 0.1.1
